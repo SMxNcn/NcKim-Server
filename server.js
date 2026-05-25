@@ -21,6 +21,10 @@ app.get("/api/mods/:id", (req, res) => {
   res.json(mod);
 });
 
+app.get("/api/rng-meter", (req, res) => {
+  res.json(JSON.parse(fs.readFileSync(path.join(__dirname, "data", "RNGMeterValues.json"), "utf-8")));
+});
+
 // SPA fallback: serve index.html for non-API, non-file routes
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
