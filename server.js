@@ -30,12 +30,35 @@ const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
 
+function beijingTime() {
+  const d = new Date();
+  const s = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const p = {};
+  s.forEach(part => { if (part.type !== "literal") p[part.type] = part.value; });
+  // ms manually
+  const ms = String(d.getTime() % 1000).padStart(3, "0");
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}.${ms}`;
+}
+
+function wsLog(msg) {
+  console.log(`[${beijingTime()}] ${msg}`);
+}
+
+function wsError(msg) {
+  console.error(`[${beijingTime()}] ${msg}`);
+}
+
 const wss = new WebSocketServer({ server });
 
 const sessions = new Map(); // ws -> { from, source, ign, island }
 
 wss.on("error", (err) => {
-  console.error(`[WS] Error:`, err.message);
+  wsError(`[WS] Error: ${err.message}`);
 });
 
 function sendJson(ws, data) {
@@ -62,7 +85,7 @@ function sessionByWs(ws) {
 
 wss.on("connection", (ws, req) => {
   const clientIp = req.socket.remoteAddress;
-  console.log(`[WS] client connected from ${clientIp}`);
+  wsLog(`[WS] client connected from ${clientIp}`);
 
   ws.on("message", (raw) => {
     let msg;
@@ -84,7 +107,7 @@ wss.on("connection", (ws, req) => {
         const onlineCount = sessions.size;
         sendJson(ws, { type: "system", payload: { content: "connected", onlineCount } });
         broadcast({ type: "player_join", source, from, timestamp: Date.now(), payload: { ign: payload.ign } }, ws);
-        console.log(`[WS] ${payload.ign} connected (online: ${onlineCount})`);
+        wsLog(`[WS] ${payload.ign} connected (online: ${onlineCount})`);
         break;
       }
 
@@ -93,7 +116,7 @@ wss.on("connection", (ws, req) => {
         if (session) {
           broadcast({ type: "player_leave", source: session.source, from: session.from, timestamp: Date.now(), payload: { ign: session.ign } }, ws);
           sessions.delete(ws);
-          console.log(`[WS] ${session.ign} disconnected`);
+          wsLog(`[WS] ${session.ign} disconnected`);
         }
         break;
       }
@@ -129,11 +152,11 @@ wss.on("connection", (ws, req) => {
     if (session) {
       broadcast({ type: "player_leave", source: session.source, from: session.from, timestamp: Date.now(), payload: { ign: session.ign } }, ws);
       sessions.delete(ws);
-      console.log(`[WS] ${session.ign} disconnected (online: ${sessions.size})`);
+      wsLog(`[WS] ${session.ign} disconnected (online: ${sessions.size})`);
     }
   });
 
   ws.on("error", (err) => {
-    console.error(`[WS] error from ${clientIp}:`, err.message);
+    wsError(`[WS] error from ${clientIp}: ${err.message}`);
   });
 });
