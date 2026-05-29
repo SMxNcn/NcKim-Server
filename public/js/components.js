@@ -130,7 +130,7 @@ function renderFooter() {
   return `
     <footer class="footer">
       <p class="footer-copy">&copy; ${new Date().getFullYear()} SMxNcn — <a href="https://github.com/SMxNcn/NcKim-Server" target="_blank" rel="noopener">GitHub</a></p>
-      <p class="footer-icp"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">沪ICP备xxxxxx号-1</a></p>
+      <p class="footer-icp"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026067336号-1</a></p>
     </footer>
   `;
 }
